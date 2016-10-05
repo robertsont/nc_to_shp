@@ -41,3 +41,6 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+#Files ending with .nc since I'm unaware if the owners are ok with public access of these documents.
+.nc
