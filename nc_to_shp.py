@@ -30,6 +30,15 @@ def getSize(start_path):
             total_size += os.path.getsize(fp)
     return total_size
 
+inputfileloc = raw_input("Enter the location of input file: ")
+outputfileloc = raw_input("Enter the location of output file: ")
+if not os.path.isfile(inputfileloc):
+  raw_input("Input file does not exist")
+  sys.exit()
+elif not os.path.isfile(outputfileloc):
+  raw_input("Output file does not exist")
+  sys.exit()
+
 #Boolean for determinig whether to read from table.csv or output.csv
 firstRead = True
 relativepath = "X:\\Hamilton\\SpatialLabBaseData\\NZ\\Climate\\CCII\\"
@@ -52,10 +61,10 @@ for subdir, dirs, files in os.walk(relativepath):
     #Only open netCDF4 files
     if filepath.endswith(".nc"):
       if firstRead:
-        fileEnding = "table.csv"
+        fileloc = inputfileloc
         firstRead = False
       else:
-        fileEnding = "output.csv"
+        fileloc = outputfileloc
       #print (filepath) +"\n", os.path.realpath("") + os.sep + fileEnding + "\n", os.path.realpath("") + os.sep + "output.csv"
 
       #Open netCDF4 file and store variables
@@ -73,10 +82,10 @@ for subdir, dirs, files in os.walk(relativepath):
         if var != "longitude" and var != "latitude" and var != "elevation" and var != "time_bnds" and var != "time":
 	  datapoint = rootgrp[var]
 	  varTitle = var
-        
+
       #Open csvs to read from and write to
-      with open(os.path.realpath("") + os.sep + fileEnding, "rb") as inputfile:
-        with open(os.path.realpath("") + os.sep + "temp.csv", "wb") as outputfile:
+      with open(fileloc, "rb") as inputfile:
+        with open(os.path.dirname(outputfileloc) + os.sep + "temp.csv", "wb") as outputfile:
           writer = csv.writer(outputfile)
           #Extract elements from csv text to an array
           row = inputfile.next().split(",")
@@ -110,8 +119,8 @@ for subdir, dirs, files in os.walk(relativepath):
               print e.value, "Skipping rest of file. Occured at ", filepath
 
       #Replace old output.csv with new csv (named temp but renamed to output)    
-      os.remove(os.path.realpath("") + os.sep + "output.csv")
-      os.rename(os.path.realpath("") + os.sep + "temp.csv", os.path.realpath("") + os.sep + "output.csv")
+      os.remove(outputfileloc)
+      os.rename(os.path.dirname(outputfileloc) + os.sep + "temp.csv", outputfileloc)
       #Release the netCDF4 file object
       rootgrp.close()
       printProgress(currentsize, totalsize, "Completed so far:", "Time taken: ", time.clock() - t0, time.clock() - t1)
