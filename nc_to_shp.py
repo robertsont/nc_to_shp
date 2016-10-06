@@ -14,10 +14,10 @@ class LatLongError(Exception):
     return repr(self.value)
 
 # Print iterations progress
-def printProgress (iteration, total, prefix = '', suffix = '', timetaken = 0, timesuffix = "seconds"):
+def printProgress (iteration, total, prefix = '', suffix = '', timetaken = 0, timerecent=0, timesuffix = "seconds"):
     formatStr       = "{0:." + str(1) + "f}"
     percents        = formatStr.format(100 * (iteration / float(total)))
-    sys.stdout.write('\r%s %s%s %s %s %s' % (prefix, percents, '%', suffix, round(timetaken,2), timesuffix)),
+    sys.stdout.write('\r%s %s%s %s %s %s %s %s %s' % (prefix, percents, '%', suffix, round(timetaken,2), timesuffix, "Last file:", round(timerecent,1), timesuffix)),
     if iteration == total:
         sys.stdout.write('\n')
     sys.stdout.flush()
@@ -43,6 +43,7 @@ t0 = time.clock()
 #Traverse through all files in all subdirectories in the path specified above
 for subdir, dirs, files in os.walk(relativepath):
   for filename in files:
+    t1 = time.clock()
     #Capture file name for use as variable name prefix in output.csv
     varprefix = filename[:-3]
     filepath = os.path.join(subdir, filename)
@@ -113,7 +114,7 @@ for subdir, dirs, files in os.walk(relativepath):
       os.rename(os.path.realpath("") + os.sep + "temp.csv", os.path.realpath("") + os.sep + "output.csv")
       #Release the netCDF4 file object
       rootgrp.close()
-      printProgress(currentsize, totalsize, "Completed so far:", "Time taken: ", time.clock() - t0)
+      printProgress(currentsize, totalsize, "Completed so far:", "Time taken: ", time.clock() - t0, time.clock() - t1)
       
     
 
