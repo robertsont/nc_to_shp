@@ -48,20 +48,19 @@ def fileReadWrite(datapoint, lats, longs, fileloc, tempfile, timeslice, years, v
       writer = csv.writer(outputfile)
       row, numberOfYears = writeTopRow(inputfile.next().split(","), timeslice, varTitle, years, filename)
       writer.writerow(row)
-      savedvalues = [[[0 for x in range(len(longs))] for y in range(len(lats))] for z in range(numberOfYears)]
+      length = len(lats)
+      savedvalues = [[[0 for x in range(len(longs))] for y in range(length)] for z in range(numberOfYears)]
       buffersize = int(math.ceil(float(datapoint.size)*128/psutil.virtual_memory()[1])) + 1
       for i in range(0, buffersize, 1):
         try:
-          datapoint1 = datapoint[:,len(lats)*i/buffersize:len(lats)*(1+i)/buffersize,:]
+          datapoint1 = datapoint[:,length*i/buffersize:length*(1+i)/buffersize,:]
           inputfile.next() 
           for row in inputfile:
             row = row.split(",")
             row[len(row)-1] = row[len(row)-1][:-2]
-            lati = np.argwhere(np.abs(lats - np.float32(row[2]))< 0.01)
-            longi = np.argwhere(np.abs(longs - np.float32(row[3]))< 0.01)
-            lati = lati[0,0]
-            longi = longi[0,0]
-            if lati < len(lats)*i/buffersize or lati >= len(lats)*(i+1)/buffersize:
+            lati = np.argwhere(np.abs(lats - np.float32(row[2]))< 0.01)[0,0]
+            longi = np.argwhere(np.abs(longs - np.float32(row[3]))< 0.01)[0,0]
+            if lati < length*i/buffersize or lati >= length*(i+1)/buffersize:
               if i == buffersize-1:
                 row = row + [savedvalues[0][lati][longi]]
                 writer.writerow(row)
@@ -74,7 +73,7 @@ def fileReadWrite(datapoint, lats, longs, fileloc, tempfile, timeslice, years, v
                 timej = np.argwhere(years == years[timejo]+timeslice)[0][0]
               except IndexError:
                 timej=years.size
-              savedvalues[j][lati][longi] = np.mean(datapoint1[timejo:timej,lati-len(lats)*i/buffersize,longi])
+              savedvalues[j][lati][longi] = datapoint1[timejo:timej,lati-length*i/buffersize,longi].mean()
               row.append(savedvalues[j][lati][longi])
             if i==buffersize-1: 
               writer.writerow(row)
