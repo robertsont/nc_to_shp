@@ -32,10 +32,10 @@ def getSize(start_path):
 
 inputfileloc = raw_input("Enter the location of input file: ")
 outputfileloc = raw_input("Enter the location of output file: ")
-inputfileloc = "C:\\Github\\nc_to_shp\\table.csv"
-outputfileloc= "C:\\Github\\nc_to_shp\\output1.csv"
+inputfileloc = "C:\\Github\\table.csv"
+outputfileloc= "C:\\Github\\output.csv"
 outputnum = raw_input("Please enter number: ")
-outputfileloc= "C:\\Github\\nc_to_shp\\output" + outputnum + ".csv"
+outputfileloc= "C:\\Github\\output" + outputnum + ".csv"
 if not os.path.isfile(inputfileloc):
   raw_input("Input file does not exist")
   sys.exit()
@@ -51,7 +51,7 @@ timeslice = int(raw_input("Please enter a time slice in years: "))
 
 #Boolean for determinig whether to read from table.csv or output.csv
 firstRead = True
-relativepath = "X:\\Hamilton\\SpatialLabBaseData\\NZ\\Climate\\CCII\\" + folder
+relativepath = "X:\\Hamilton\\SpatialLabBaseData\\NZ\\Climate\\CCII\\RCP2.6" + folder
 totalsize = getSize(relativepath)
 print totalsize/(1024*1024*1024), "GB"
 currentsize = 0
