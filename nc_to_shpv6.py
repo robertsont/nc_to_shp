@@ -49,7 +49,7 @@ def fileReadWrite(datapoint, lats, longs, fileloc, tempfile, timeslice, years, v
       row, numberOfYears = writeTopRow(inputfile.next().split(","), timeslice, varTitle, years, filename)
       writer.writerow(row)
       length = len(lats)
-      savedvalues = [[[0 for x in range(len(longs))] for y in range(length)] for z in range(numberOfYears)]
+      savedvalues = [[[0 for z in range(numberOfYears)] for x in range(len(longs))] for y in range(length)]
       buffersize = int(math.ceil(float(datapoint.size)*128/psutil.virtual_memory()[1])) + 1
       for i in range(0, buffersize, 1):
         try:
@@ -58,11 +58,18 @@ def fileReadWrite(datapoint, lats, longs, fileloc, tempfile, timeslice, years, v
           for row in inputfile:
             row = row.split(",")
             row[len(row)-1] = row[len(row)-1][:-2]
-            lati = np.argwhere(np.abs(lats - np.float32(row[2]))< 0.01)[0,0]
-            longi = np.argwhere(np.abs(longs - np.float32(row[3]))< 0.01)[0,0]
+            lati = np.argwhere(np.abs(lats - np.float32(row[2]))< 0.01)
+            longi = np.argwhere(np.abs(longs - np.float32(row[3]))< 0.01)
+            if len(lati) == 0 or len(longi) == 0:
+              if i == buffersize-1:
+                row = row + [np.ma.masked for k in range(0, numberOfYears, 1)]
+                writer.writerow(row)
+              continue
+            lati = lati[0,0]
+            longi = longi[0,0]
             if lati < length*i/buffersize or lati >= length*(i+1)/buffersize:
               if i == buffersize-1:
-                row = row + [savedvalues[0][lati][longi]]
+                row = row + savedvalues[lati][longi][:]
                 writer.writerow(row)
               continue
             timej = 0
@@ -73,8 +80,8 @@ def fileReadWrite(datapoint, lats, longs, fileloc, tempfile, timeslice, years, v
                 timej = np.argwhere(years == years[timejo]+timeslice)[0][0]
               except IndexError:
                 timej=years.size
-              savedvalues[j][lati][longi] = datapoint1[timejo:timej,lati-length*i/buffersize,longi].mean()
-              row.append(savedvalues[j][lati][longi])
+              savedvalues[lati][longi][j] = datapoint1[timejo:timej,lati-length*i/buffersize,longi].mean()
+              row.append(savedvalues[lati][longi][j])
             if i==buffersize-1: 
               writer.writerow(row)
           inputfile.seek(0)
@@ -90,6 +97,7 @@ def runDataAvg(inputfileloc, outputfileloc, tempfile, timeslice, relativepath):
   #Boolean for determinig whether to read from table.csv or output.csv
   firstRead = True
   totalsize = getSize(relativepath)
+  log = []
 
   print "Directory size", totalsize/(1024*1024*1024), "GB"
   currentsize = 0
@@ -109,17 +117,21 @@ def runDataAvg(inputfileloc, outputfileloc, tempfile, timeslice, relativepath):
           firstRead = False
         else:
           fileloc = outputfileloc
-        
-        rootgrp, lats, longs, years, t3 = extractData(filepath)
+        try:
+          rootgrp, lats, longs, years, t3 = extractData(filepath)
 
-        for var in iter(rootgrp.variables):		
-          if var != "longitude" and var != "latitude" and var != "elevation" and var != "time_bnds" and var != "time":
-            fileReadWrite(rootgrp[var], lats, longs, fileloc, tempfile, timeslice, years, var, filename)
-         
-        os.remove(outputfileloc)
-        os.rename(tempfile, outputfileloc)
-        rootgrp.close()
-        printProgress(currentsize, totalsize, "Completed so far:", "Time taken: ", time.clock() - t0, time.clock() - t1, t3)
-        
+          for var in iter(rootgrp.variables):		
+            if var != "longitude" and var != "latitude" and var != "elevation" and var != "time_bnds" and var != "time":
+              fileReadWrite(rootgrp[var], lats, longs, fileloc, tempfile, timeslice, years, var, filename)
+           
+          os.remove(outputfileloc)
+          os.rename(tempfile, outputfileloc)
+          rootgrp.close()
+          printProgress(currentsize, totalsize, "Completed so far:", "Time taken: ", time.clock() - t0, time.clock() - t1, t3)
+
+        except OverflowError as e:
+          log = log + [e, filename]
+
+  print log
     
 
