@@ -1,4 +1,4 @@
-import sys, os, time, csv, traceback
+import sys, os, time, csv
 from collections import deque
 import numpy as np
 from netCDF4 import Dataset, num2date
@@ -55,7 +55,7 @@ def extractData(filepath):
   rootgrp = scinet.netcdf_file(filepath, "r", False)
   return rootgrp, rootgrp.variables["latitude"][:].copy(), rootgrp.variables["longitude"][:].copy(), np.asarray([getattr(x, "year") for x in [num2date(y,rootgrp.variables["time"].units.decode('utf8')) for y in rootgrp.variables["time"][:]]])
 
-def runDataAvg(inputfileloc, outputfileloc, tempfile, timeslice, relativepath):
+def runDataAvg(inputfileloc, outputfileloc, timeslice, relativepath):
   #Boolean for determining whether to read from table.csv or output.csv
   totalsize = getSize(relativepath)
   log = []
@@ -64,6 +64,7 @@ def runDataAvg(inputfileloc, outputfileloc, tempfile, timeslice, relativepath):
   currentsize = 0
   printProgress(currentsize, totalsize, "Completed so far:",)
   outputData = deque()
+  
   with open(inputfileloc, "r") as inputfile:
     counter = 0  
     for row in inputfile:
@@ -86,14 +87,10 @@ def runDataAvg(inputfileloc, outputfileloc, tempfile, timeslice, relativepath):
           for var in iter(rootgrp.variables):
             if var != 'longitude' and var != 'latitude' and var != 'elevation' and var != 'time_bnds' and var != 'time' and var != 'x_index' and var != 'y_index' and var != 'time_bounds':
               try:
-                t6 = time.clock()
                 outputData = fileReadWrite(rootgrp.variables[var][:,:,:].copy(), lats, longs, outputData, timeslice, years, var, filename)
-                print(" ", time.clock()-t6)
-              except (SyntaxError) as e:
+              except (KeyError, IndexError) as e:
                 log = log + [e, var, filename]
           rootgrp.close()
-
-          print(len(outputData[0])) 
           printProgress(currentsize, totalsize, "Completed so far:", "Time taken: ", time.clock() - t0, time.clock() - t1, t3)
 
         except OverflowError as e:
