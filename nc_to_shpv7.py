@@ -32,7 +32,7 @@ def writeTopRow(row, timeslice, varTitle, years, filename):
   return row, numberOfYears
 
 def fileReadWrite(datapoint, lats, longs, fileloc, tempfile, timeslice, years, varTitle, filename):
-  with open(fileloc, "r") as inputfile:
+  with open(fileloc, "r+") as inputfile:
     with open(tempfile, "w", newline='') as outputfile:
       writer = csv.writer(outputfile)
       row, numberOfYears = writeTopRow(next(inputfile).split(","), timeslice, varTitle, years, filename)
@@ -63,8 +63,8 @@ def extractData(filepath):
 
 def runDataAvg(inputfileloc, outputfileloc, tempfile, timeslice, relativepath):
   #Boolean for determining whether to read from table.csv or output.csv
-  firstRead = True
   totalsize = getSize(relativepath)
+  firstRead = True
   log = []
 
   print("Directory size", totalsize/(1024*1024*1024), "GB")
