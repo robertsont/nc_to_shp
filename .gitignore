@@ -46,3 +46,4 @@ Temporary Items
 *.nc
 *.csv
 *.pyc
+log.txt
