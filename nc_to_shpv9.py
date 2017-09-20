@@ -21,17 +21,17 @@ def getSize(start_path):
             total_size += os.path.getsize(fp)
     return total_size
 
-def writeTopRow(row, timeslice, varTitle, years, filename):
+def writeTopRow(row, timeslice, varTitle, years, filename, subdir):
   #Place variable name as first element in new column
-  row.append(filename[:-3] + "_" + varTitle)
+  row.append(filename[:-3] + "_" + varTitle + "_" + subdir.split('\\')[subdir.split('\\').index('CCII')+1])
   #Based on timeslice, figure out the division of years for the file
   numberOfYears =  int(len(set(years))/(timeslice)+(len(set(years))%timeslice != 0))
   if len(set(years)) > timeslice:
     row = row + [str(years[0]+(timeslice)*(x-1)) + "-" + str(years[0]+(timeslice)*x-1) for x in list(range(2,numberOfYears))] + [str(years[0]+(timeslice)*(numberOfYears-1)) + "-" + str(years[years.size-1])] # for x in range(0, len(set(years))%(timeslice) != 0)]
   return row, numberOfYears
 
-def fileReadWrite(datapoint, lats, longs, outputData, timeslice, years, varTitle, filename):
-  row, numberOfYears = writeTopRow(outputData[0], timeslice, varTitle, years, filename)
+def fileReadWrite(datapoint, lats, longs, outputData, timeslice, years, varTitle, filename, subdir):
+  row, numberOfYears = writeTopRow(outputData[0], timeslice, varTitle, years, filename, subdir)
   outputData[0] = row
   for outCount in range(1,len(outputData)):
     row = outputData[outCount]
@@ -87,7 +87,7 @@ def runDataAvg(inputfileloc, outputfileloc, timeslice, relativepath):
           for var in iter(rootgrp.variables):
             if var != 'longitude' and var != 'latitude' and var != 'elevation' and var != 'time_bnds' and var != 'time' and var != 'x_index' and var != 'y_index' and var != 'time_bounds':
               try:
-                outputData = fileReadWrite(rootgrp.variables[var][:,:,:].copy(), lats, longs, outputData, timeslice, years, var, filename)
+                outputData = fileReadWrite(rootgrp.variables[var][:,:,:].copy(), lats, longs, outputData, timeslice, years, var, filename, subdir)
               except (KeyError, IndexError) as e:
                 log = log + [e, var, filename]
           rootgrp.close()
